@@ -24,6 +24,7 @@ class ComplexTypeDemo{
 	public $StringB=null;
 	public $Integer=123;
 	public $Boolean=true;
+    public $t=12;
 }
 
 // You can also create array types as complex type. Here for the string type and the ComplexTypeDemo complex type.
