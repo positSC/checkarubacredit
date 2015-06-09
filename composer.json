@@ -4,6 +4,7 @@
       "type": "package",
       "package": {
         "name": "checkarubacredit/wsdlsoaplibrary",
+        "branch": "master",
         "version": "master",
         "autoload": { "psr-0": { "checkarubacredit/wsdlsoaplibrary": "" } },
         "target-dir": "checkarubacredit/wsdlsoaplibrary",
@@ -16,6 +17,6 @@
     }
   ],
   "require": {
-    "checkarubacredit/wsdlsoaplibrary": "*"
+    "checkarubacredit/wsdlsoaplibrary": "dev-master"
   }
 }
