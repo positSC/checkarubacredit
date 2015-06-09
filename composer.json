@@ -3,11 +3,10 @@
     {
       "type": "package",
       "package": {
-        "name": "checkarubacredit/tree/master/wsdlsoaplibrary",
-        "branch": "master",
+        "name": "checkarubacredit/wsdlsoaplibrary",
         "version": "master",
         "autoload": { "psr-0": { "checkarubacredit/wsdlsoaplibrary": "" } },
-        "target-dir": "checkarubacredit/tree/master/wsdlsoaplibrary",
+        "target-dir": "checkarubacredit/wsdlsoaplibrary",
         "source": {
           "url": "http://positSC/checkarubacredit.git",
           "type": "git",
