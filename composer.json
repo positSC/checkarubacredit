@@ -3,19 +3,17 @@
     {
       "type": "package",
       "package": {
-        "name": "checkarubacredit/wsdlsoaplibrary",
-        "version": "master",
-        "autoload": { "psr-0": { "checkarubacredit/wsdlsoaplibrary": "" } },
-        "target-dir": "checkarubacredit/wsdlsoaplibrary",
+        "name": "checkarubacredit",
+        "version": "dev-master",
         "source": {
-          "url": "http://positSC/checkarubacredit.git",
+          "url": "https://github.com/positSC/checkarubacredit",
           "type": "git",
-          "reference": "master"
+          "reference": "origin/master"
         }
       }
     }
   ],
   "require": {
-    "checkarubacredit/wsdlsoaplibrary": "dev-master"
+    "checkarubacredit": "dev-master"
   }
 }
