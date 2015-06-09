@@ -2,7 +2,7 @@
   "repositories": [
     {
       "type": "git",
-      "url": "https://github.com/positSC/checkarubacredit"
+      "url": "https://github.com/positSC/checkarubacredit.git"
     }
   ],
   "require": {
