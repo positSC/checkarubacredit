@@ -1,0 +1,11 @@
+{
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/positSC/checkarubacredit"
+    }
+  ],
+  "require": {
+    "checkarubacredit/wsdlsoaplibrary": "1.0"
+  }
+}
