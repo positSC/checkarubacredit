@@ -6,6 +6,6 @@
     }
   ],
   "require": {
-    "checkarubacredit/wsdlsoaplibrary": "1.0"
+    "checkarubacredit/wsdlsoaplibrary": "dev-master"
   }
 }
