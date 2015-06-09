@@ -23,7 +23,7 @@ if(basename($_SERVER['SCRIPT_FILENAME'])==basename(__FILE__))
 // To use PhpWsdlClient, you need to load it seperatly from PhpWsdl. Or you 
 // just load this class and let it autoload PhpWsdl 
 
-require_once(dirname(__FILE__).'/class.phpwsdl.php');
+require_once(dirname(__FILE__) . '/class.phpwsdl.php');
 
 /**
  * A SOAP client class for PhpWsdl

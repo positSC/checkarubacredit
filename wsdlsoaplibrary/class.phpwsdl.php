@@ -33,14 +33,14 @@ PhpWsdl::Init();
 // requires out.
 // You may also disable loading the class.phpwsdlproxy.php, if you don't plan 
 // to use the proxy class for your webservice.
-require_once(dirname(__FILE__).'/class.phpwsdlformatter.php');
-require_once(dirname(__FILE__).'/class.phpwsdlobject.php');
-require_once(dirname(__FILE__).'/class.phpwsdlparser.php');
-require_once(dirname(__FILE__).'/class.phpwsdlproxy.php');
-require_once(dirname(__FILE__).'/class.phpwsdlparam.php');
-require_once(dirname(__FILE__).'/class.phpwsdlmethod.php');
-require_once(dirname(__FILE__).'/class.phpwsdlelement.php');
-require_once(dirname(__FILE__).'/class.phpwsdlcomplex.php');
+require_once(dirname(__FILE__) . '/class.phpwsdlformatter.php');
+require_once(dirname(__FILE__) . '/class.phpwsdlobject.php');
+require_once(dirname(__FILE__) . '/class.phpwsdlparser.php');
+require_once(dirname(__FILE__) . '/class.phpwsdlproxy.php');
+require_once(dirname(__FILE__) . '/class.phpwsdlparam.php');
+require_once(dirname(__FILE__) . '/class.phpwsdlmethod.php');
+require_once(dirname(__FILE__) . '/class.phpwsdlelement.php');
+require_once(dirname(__FILE__) . '/class.phpwsdlcomplex.php');
 
 // Do things after the environment is configured
 PhpWsdl::PostInit();
@@ -1816,6 +1816,15 @@ class PhpWsdl{
 				self::Debug('Server options: '.print_r($temp,true));
 			// Create the server object
 			self::Debug('Creating PHP SoapServer object');
+            //Get soap header
+            $hdr = file_get_contents("php://input");
+            if (strpos($hdr,'<soapenv:Header>')===false) {
+                $hdr = null;
+            } else {
+                $hdr = explode('<soapenv:Header>',$hdr);
+                $hdr = explode('</soapenv:Header>',$hdr[1]);
+                $hdr = $hdr[0];
+            }
 			$this->SoapServer=new SoapServer(
 				$wsdlFile,
 				$temp
@@ -1825,7 +1834,7 @@ class PhpWsdl{
 				$temp=($useProxy)?'PhpWsdlProxy':$class;
 				if(!is_null($temp)){
 					self::Debug('Setting server class '.$temp);
-					$this->SoapServer->setClass($temp);
+					$this->SoapServer->setClass($temp, $hdr);
 				}else{
 					self::Debug('No server class or object');
 				}

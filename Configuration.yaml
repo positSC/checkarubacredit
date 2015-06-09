@@ -1,0 +1,7 @@
+--- #Mail Parameters
+
+  mail_from: info@posit.it
+  mail_to: mikefriz91@gmail.com
+  mail_char_set: ISO-8859-1
+  username: userProva
+  password: pswProva

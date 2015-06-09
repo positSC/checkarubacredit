@@ -20,6 +20,8 @@ this program; if not, see <http://www.gnu.org/licenses/>.
 if(basename($_SERVER['SCRIPT_FILENAME'])==basename(__FILE__))
 	exit;
 
+require_once('class.filereader.php');
+
 /**
  * Check Cloud Aruba state
  * http://kb.arubacloud.com/en/partner/partner-panel/how-to-customise-the-external-services.aspx
@@ -29,21 +31,132 @@ if(basename($_SERVER['SCRIPT_FILENAME'])==basename(__FILE__))
  */
 class SoapAruba{
 
+    private $mailParameters;
+    private $thresholdReached = false;
+    private $creditExhausted = false;
+    private $isAuthenticated = false;
+
     /* ------------------------------------------------------------ */
-    /* ---------------- PARAMETER CONFIGURATION ------------------- */
+    /* ---------------- Soap Header Auth ------------------- */
     /* ------------------------------------------------------------ */
 
-    const MAIL_FROM     = "info@posit.it";
-    const MAIL_TO       = "info@posit.it";
-    const MAIL_CHAR_SET = "iso-8859-1";
-    const USERNAME      = "posit";
-    const PASSWORD      = "pwdPassPosit!!";
+    //Soap Server setClass function passes soap header $hdr to the service class SoapAruba
+
+    function __construct($hdr)
+    {
+        $this->mailParameters = FileReader::ReadFile('Configuration.yaml');
+
+        if ($hdr!=null)
+        {
+            //user defined username and password
+            $authUsername = $this->mailParameters['username'];
+            $authPassword = $this->mailParameters['password'];
+
+            //Clean soap header from xml tags
+            $hdrCleaned = $this->cleanString($hdr);
+
+            //Extract user and password for auth
+            $username = strstr($hdrCleaned, $authPassword, true);
+            $password = strstr($hdrCleaned, $authPassword);
+
+
+            if($username == $authUsername && $password == $authPassword)
+            {
+                $this->isAuthenticated = true;
+            }
+
+        }
+    }
+
+    function cleanString($string)
+    {
+        $string = str_replace('<cred:AuthHeader>','', $string);
+        $string = str_replace('</cred:AuthHeader>', '', $string);
+        $string = str_replace('<cred:Username>', '', $string);
+        $string = str_replace('</cred:Username>', '', $string);
+        $string = str_replace('<cred:Password>', '', $string);
+        $string = str_replace('</cred:Password>', '', $string);
+        $string = str_replace('<!--Optional:-->', '', $string);
+
+        $string = preg_replace('/\s+/', '', $string);
+
+        return $string;
+    }
+
+    function createEmailBody($eventGuid, $eventDateTime, $username, $externalUserId, $userId,
+                             $accountBalance, $availableBalance, $overdraftLimit, $thresholdCredit,
+                             $accountStatus, $creationDate, $rechargeDate, $plafondDate, $lastTransactionDate)
+    {
+        if($this->thresholdReached == true)
+        {
+            $body = '
+            <html>
+            <head>
+             <title>Soglia oltrepassata</title>
+            </head>
+            <body>
+            <table>
+                <tr><td>Username</td><td>'.$username.'</td></tr>
+                <tr><td>ExternalUserId</td><td>'.$externalUserId.'</td></tr>
+                <tr><td>UserId</td><td>'.$userId.'</td></tr>
+                <tr><td>EventGuid</td><td>'.$eventGuid.'</td></tr>
+                <tr><td>EventDateTime</td><td>'.$eventDateTime.'</td></tr>
+                <tr><td>Accountbalance</td><td>'.$accountBalance.'</td></tr>
+                <tr><td>AvailableBalance</td><td>'.$availableBalance.'</td></tr>
+                <tr><td>OverdraftLimit</td><td>'.$overdraftLimit.'</td></tr>
+                <tr><td>ThresholdCredit</td><td>'.$thresholdCredit.'</td></tr>
+                <tr><td>AccountStatus</td><td>'.$accountStatus.'</td></tr>
+                <tr><td>CreationDate</td><td>'.$creationDate.'</td></tr>
+                <tr><td>RechargeDate</td><td>'.$rechargeDate.'</td></tr>
+                <tr><td>PlafondDate</td><td>'.$plafondDate.'</td></tr>
+                <tr><td>LastTransactionDate</td><td>'.$lastTransactionDate.'</td></tr>
+            </table>
+            </body>
+            </html>
+            ';
+            $this->thresholdReached = false;
+            return $body;
+        }
+        else if($this->creditExhausted == true)
+        {
+            $body = '
+            <html>
+            <head>
+             <title>Credito residuo esaurito</title>
+            </head>
+            <body>
+            <table>
+                <tr><td>Username</td><td>'.$username.'</td></tr>
+                <tr><td>ExternalUserId</td><td>'.$externalUserId.'</td></tr>
+                <tr><td>UserId</td><td>'.$userId.'</td></tr>
+                <tr><td>EventGuid</td><td>'.$eventGuid.'</td></tr>
+                <tr><td>EventDateTime</td><td>'.$eventDateTime.'</td></tr>
+                <tr><td>Accountbalance</td><td>'.$accountBalance.'</td></tr>
+                <tr><td>AvailableBalance</td><td>'.$availableBalance.'</td></tr>
+                <tr><td>OverdraftLimit</td><td>'.$overdraftLimit.'</td></tr>
+                <tr><td>ThresholdCredit</td><td>'.$thresholdCredit.'</td></tr>
+                <tr><td>AccountStatus</td><td>'.$accountStatus.'</td></tr>
+                <tr><td>CreationDate</td><td>'.$creationDate.'</td></tr>
+                <tr><td>RechargeDate</td><td>'.$rechargeDate.'</td></tr>
+                <tr><td>PlafondDate</td><td>'.$plafondDate.'</td></tr>
+                <tr><td>LastTransactionDate</td><td>'.$lastTransactionDate.'</td></tr>
+            </table>
+            </body>
+            </html>
+            ';
+            $this->creditExhausted = false;
+            return $body;
+        }
+
+        return false;
+    }
+
 
     /* ------------------------------------------------------------ */
     /* ------------------------------------------------------------ */
 
 	/**
-	 * ReceiveThresholdReached: questo metodo viene richiamato nel caso in cui venga oltrepassata la soglia del credito definita dall'utente
+	 * ReceiveThresholdReached: this method is called when the user-defined credit threshold is reached
 	 * @param  string $EventGuid
      * @param  string $EventDateTime
      * @param  string $Username
@@ -76,39 +189,23 @@ class SoapAruba{
                 ,$LastTransactionDate=NULL
                 )
      {
+         if(!$this->isAuthenticated)
+         {
+             error_log('Aruba auth failed! Mail not sent',1, $this->mailParameters['mail_to']);
+             return null;
+         }
 
-         $to      = self::MAIL_TO;
-         $subject = 'Soglia cloud oltrepassata';
-         $message = '
-            <html>
-            <head>
-             <title>Soglia oltrepassata</title>
-            </head>
-            <body>
-            <table>
-                <tr><td>Username</td><td>'.$Username.'</td></tr>
-                <tr><td>ExternalUserId</td><td>'.$ExternalUserId.'</td></tr>
-                <tr><td>UserId</td><td>'.$UserId.'</td></tr>
-                <tr><td>EventGuid</td><td>'.$EventGuid.'</td></tr>
-                <tr><td>EventDateTime</td><td>'.$EventDateTime.'</td></tr>
-                <tr><td>Accountbalance</td><td>'.$Accountbalance.'</td></tr>
-                <tr><td>AvailableBalance</td><td>'.$AvailableBalance.'</td></tr>
-                <tr><td>OverdraftLimit</td><td>'.$OverdraftLimit.'</td></tr>
-                <tr><td>ThresholdCredit</td><td>'.$ThresholdCredit.'</td></tr>
-                <tr><td>AccountStatus</td><td>'.$AccountStatus.'</td></tr>
-                <tr><td>CreationDate</td><td>'.$CreationDate.'</td></tr>
-                <tr><td>RechargeDate</td><td>'.$RechargeDate.'</td></tr>
-                <tr><td>PlafondDate</td><td>'.$PlafondDate.'</td></tr>
-                <tr><td>LastTransactionDate</td><td>'.$LastTransactionDate.'</td></tr>
-            </table>
-            </body>
-            </html>
-            ';
+         $this->thresholdReached = true;
+         $to      = $this->mailParameters['mail_to'];
+         $subject = 'Soglia credito raggiunta';
+         $message = $this->createEmailBody($EventGuid, $EventDateTime, $Username, $ExternalUserId
+             ,$UserId, $Accountbalance, $AvailableBalance, $OverdraftLimit, $ThresholdCredit, $AccountStatus
+             ,$CreationDate, $RechargeDate, $PlafondDate, $LastTransactionDate);
 
-        /* Per inviare email in formato HTML, si deve impostare l'intestazione Content-type. */
+         /* To send the mail with HTML format you have to set the header Content-type */
         $headers  = "MIME-Version: 1.0\r\n";
-        $headers .= "Content-type: text/html; charset=".self::MAIL_CHAR_SET."\r\n";
-        $headers .= "From: ".self::MAIL_FROM."\r\n";
+        $headers .= "Content-type: text/html; charset=".$this->mailParameters['mail_char_set']."\r\n";
+        $headers .= "From: ".$this->mailParameters['mail_from']."\r\n";
 
         if ( mail($to, $subject, $message, $headers) )
         {
@@ -119,9 +216,10 @@ class SoapAruba{
             error_log(" ReceiveThresholdReached: mail non inviata");
         }
         return TRUE;
+
      }
     /**
-     * ReceiveCreditExhausted: questo metodo viene richiamato quando l'utente finisce il credito disponibile
+     * ReceiveCreditExhausted: this method is called when the user terminates his credit
      * @param string $EventGuid
      * @param string $EventDateTime
      * @param string $Username
@@ -153,39 +251,26 @@ class SoapAruba{
         , $PlafondDate
         , $LastTransactionDate)
     {
-        $to      = self::MAIL_TO;
-        $subject = 'Credito disponibile esaurito';
-        $message = '
-            <html>
-            <head>
-             <title>Credito disponibile esaurito</title>
-            </head>
-            <body>
-            <table>
-                <tr><td>Username</td><td>'.$Username.'</td></tr>
-                <tr><td>ExternalUserId</td><td>'.$ExternalUserId.'</td></tr>
-                <tr><td>UserId</td><td>'.$UserId.'</td></tr>
-                <tr><td>EventGuid</td><td>'.$EventGuid.'</td></tr>
-                <tr><td>EventDateTime</td><td>'.$EventDateTime.'</td></tr>
-                <tr><td>Accountbalance</td><td>'.$Accountbalance.'</td></tr>
-                <tr><td>AvailableBalance</td><td>'.$AvailableBalance.'</td></tr>
-                <tr><td>OverdraftLimit</td><td>'.$OverdraftLimit.'</td></tr>
-                <tr><td>ThresholdCredit</td><td>'.$ThresholdCredit.'</td></tr>
-                <tr><td>AccountStatus</td><td>'.$AccountStatus.'</td></tr>
-                <tr><td>CreationDate</td><td>'.$CreationDate.'</td></tr>
-                <tr><td>RechargeDate</td><td>'.$RechargeDate.'</td></tr>
-                <tr><td>PlafondDate</td><td>'.$PlafondDate.'</td></tr>
-                <tr><td>LastTransactionDate</td><td>'.$LastTransactionDate.'</td></tr>
-            </table>
-            </body>
-            </html>
-            ';
+        if(!$this->isAuthenticated)
+        {
+            error_log('Aruba auth failed! Mail not sent',1, $this->mailParameters['mail_to']);
+            return null;
+        }
 
 
-        /* Per inviare email in formato HTML, si deve impostare l'intestazione Content-type. */
+        $this->creditExhausted = true;
+        $to      = $this->mailParameters['mail_to'];
+        $subject = 'Credito esaurito';
+        $message = $this->createEmailBody($EventGuid, $EventDateTime, $Username, $ExternalUserId
+            ,$UserId, $Accountbalance, $AvailableBalance, $OverdraftLimit, $ThresholdCredit, $AccountStatus
+            ,$CreationDate, $RechargeDate, $PlafondDate, $LastTransactionDate);
+
+
+        /* To send the mail with HTML format you have to set the header Content-type */
         $headers  = "MIME-Version: 1.0\r\n";
-        $headers .= "Content-type: text/html; charset=".self::MAIL_CHAR_SET."\r\n";
-        $headers .= "From: ".self::MAIL_FROM."\r\n";
+        $headers .= "Content-type: text/html; charset=".$this->mailParameters['mail_char_set']."\r\n";
+        $headers .= "From: ".$this->mailParameters['mail_from']."\r\n";
+
 
         if ( mail($to, $subject, $message, $headers) )
         {
