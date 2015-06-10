@@ -1,7 +1,7 @@
                                             #CHECK ARUBA CREDIT
-/*
+
 SoapAruba - Check Aruba Cloud
-Copyright (C) 2015  Posit http://www.posit.it
+Copyright (C) 2015  Posit [Posit Website](http://www.posit.it)
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -14,7 +14,7 @@ FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
 this program; if not, see [GNU License Page](http://www.gnu.org/licenses/).
-*/
+
 
 Receive a mail when you reach your credit threshold and when the credit is exhausted.
 
