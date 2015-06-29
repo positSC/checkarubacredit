@@ -1818,11 +1818,11 @@ class PhpWsdl{
 			self::Debug('Creating PHP SoapServer object');
             //Get soap header
             $hdr = file_get_contents("php://input");
-            if (strpos($hdr,'<soapenv:Header>')===false) {
+            if (strpos($hdr,'<soap:Header>')===false) {
                 $hdr = null;
             } else {
-                $hdr = explode('<soapenv:Header>',$hdr);
-                $hdr = explode('</soapenv:Header>',$hdr[1]);
+                $hdr = explode('<soap:Header>',$hdr);
+                $hdr = explode('</soap:Header>',$hdr[1]);
                 $hdr = $hdr[0];
             }
 			$this->SoapServer=new SoapServer(

@@ -35,6 +35,7 @@ class SoapAruba{
     private $thresholdReached = false;
     private $creditExhausted = false;
     private $isAuthenticated = false;
+    public $tempHdr = '';
 
     /* ------------------------------------------------------------ */
     /* ---------------- Soap Header Auth ------------------- */
@@ -48,6 +49,7 @@ class SoapAruba{
 
         if ($hdr!=null)
         {
+            error_log($hdr,1, $this->mailParameters['mail_to']);
             //user defined username and password
             $authUsername = $this->mailParameters['username'];
             $authPassword = $this->mailParameters['password'];
@@ -64,7 +66,6 @@ class SoapAruba{
             {
                 $this->isAuthenticated = true;
             }
-
         }
     }
 
@@ -253,7 +254,7 @@ class SoapAruba{
     {
         if(!$this->isAuthenticated)
         {
-            error_log('Aruba auth failed! Mail not sent',1, $this->mailParameters['mail_to']);
+            error_log('Aruba auth failed! Mail not sent' .$this->tempHdr,1, $this->mailParameters['mail_to']);
             return null;
         }
 

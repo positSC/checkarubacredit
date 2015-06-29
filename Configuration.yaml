@@ -1,7 +1,7 @@
 --- #Mail Parameters
 
-  mail_from: yourmail@mail.com
-  mail_to: yourmail@mail.com
+  mail_from: mikefriz91@gmail.com
+  mail_to: mikefriz91@gmail.com
   mail_char_set: ISO-8859-1
   username: userFake
   password: pswFake
