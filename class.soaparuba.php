@@ -49,7 +49,6 @@ class SoapAruba{
 
         if ($hdr!=null)
         {
-            error_log($hdr,1, $this->mailParameters['mail_to']);
             //user defined username and password
             $authUsername = $this->mailParameters['username'];
             $authPassword = $this->mailParameters['password'];
@@ -61,7 +60,6 @@ class SoapAruba{
             $username = strstr($hdrCleaned, $authPassword, true);
             $password = strstr($hdrCleaned, $authPassword);
 
-
             if($username == $authUsername && $password == $authPassword)
             {
                 $this->isAuthenticated = true;
@@ -71,13 +69,12 @@ class SoapAruba{
 
     function cleanString($string)
     {
-        $string = str_replace('<cred:AuthHeader>','', $string);
-        $string = str_replace('</cred:AuthHeader>', '', $string);
-        $string = str_replace('<cred:Username>', '', $string);
-        $string = str_replace('</cred:Username>', '', $string);
-        $string = str_replace('<cred:Password>', '', $string);
-        $string = str_replace('</cred:Password>', '', $string);
-        $string = str_replace('<!--Optional:-->', '', $string);
+        $string = str_replace('<AuthHeader xmlns="http://public.ws.aruba.it/aruba/services/CreditEventReceiver/">','', $string);
+        $string = str_replace('</AuthHeader>', '', $string);
+        $string = str_replace('<Username>', '', $string);
+        $string = str_replace('</Username>', '', $string);
+        $string = str_replace('<Password>', '', $string);
+        $string = str_replace('</Password>', '', $string);
 
         $string = preg_replace('/\s+/', '', $string);
 
